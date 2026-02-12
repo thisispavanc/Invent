@@ -17,7 +17,7 @@ Employee.hasOne(User, { foreignKey: 'employee_id', as: 'userAccount' });
 
 // 2. Employee <-> Device (Currently Assigned)
 Employee.hasMany(Device, { foreignKey: 'currently_assigned_to', as: 'currentDevices' });
-Device.belongsTo(Employee, { foreignKey: 'currently_assigned_to', as: 'assignee' });
+Device.belongsTo(Employee, { foreignKey: 'currently_assigned_to', as: 'employee' });
 
 // 3. Employee <-> Assignment (History)
 Employee.hasMany(Assignment, { foreignKey: 'employee_id', as: 'assignmentHistory' });

@@ -26,16 +26,39 @@ const connectDB = async () => {
     try {
         await sequelize.authenticate();
         console.log('Database connected successfully.');
-        // Sync models (optional, safer to use migrations in production)
-        // await sequelize.sync({ force: false }); 
+        // Sync models for development
+        await sequelize.sync({ alter: true });
+        console.log('Database synced successfully.');
     } catch (error) {
         console.error('Unable to connect to the database:', error);
         process.exit(1);
     }
 };
 
+// Session configuration
+const session = require('express-session');
+const SequelizeStore = require('connect-session-sequelize')(session.Store);
+
+const sessionStore = new SequelizeStore({
+    db: sequelize,
+});
+
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'secret',
+    store: sessionStore,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+}));
+
+sessionStore.sync();
+
 // Routes
-// app.use('/api', require('./routes'));
+app.use('/api', require('./routes'));
 
 app.get('/', (req, res) => {
     res.send('API is running...');

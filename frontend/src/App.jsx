@@ -1,55 +1,73 @@
-import { useState, useEffect } from 'react'
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Layout from './components/Layout';
+import Users from './pages/admin/Users';
+import UserForm from './pages/admin/UserForm';
+import DeviceList from './pages/inventory/DeviceList';
+import DeviceForm from './pages/inventory/DeviceForm';
+import DeviceDetails from './pages/inventory/DeviceDetails';
+import EmployeeList from './pages/employees/EmployeeList';
+import EmployeeForm from './pages/employees/EmployeeForm';
+import EmployeeDetails from './pages/employees/EmployeeDetails';
+import AuditLogs from './pages/admin/AuditLogs';
+import VerticalDetails from './pages/admin/VerticalDetails';
+import { AuthProvider, useAuth } from './context/AuthContext';
+
+// Protected Route Component
+const ProtectedRoute = ({ allowedRoles }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
+
+  if (!user) return <Navigate to="/login" replace />;
+
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <Outlet />;
+};
 
 function App() {
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
-  useEffect(() => {
-    fetch('http://localhost:3000/')
-      .then(res => res.text())
-      .then(data => {
-        setData(data)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error("Backend error:", err)
-        setError("Could not connect to backend")
-        setLoading(false)
-      })
-  }, [])
-
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
-        <h1 className="text-2xl font-bold text-blue-600 mb-4">Tanuh Inventory Management</h1>
+    <AuthProvider>
+      <Routes>
+        <Route path="/login" element={<Login />} />
 
-        <div className="space-y-4">
-          <div className="p-4 bg-gray-50 rounded border border-gray-200">
-            <h2 className="font-semibold text-gray-700">Frontend Status</h2>
-            <p className="text-green-600">✅ Running successfully</p>
-            <p className="text-sm text-gray-500 mt-1">Tailwind CSS is configured.</p>
-          </div>
+        {/* Protected Area */}
+        <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'employee']} />}>
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
 
-          <div className="p-4 bg-gray-50 rounded border border-gray-200">
-            <h2 className="font-semibold text-gray-700">Backend Status</h2>
-            {loading ? (
-              <p className="text-blue-500">Connecting...</p>
-            ) : error ? (
-              <p className="text-red-500">❌ {error}</p>
-            ) : (
-              <p className="text-green-600">✅ {data}</p>
-            )}
-            {error && (
-              <p className="text-xs text-red-500 mt-1">
-                Ensure backend server is running on port 3000 and database is connected.
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+            {/* Super Admin Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
+              <Route path="/admin/users" element={<Users />} />
+              <Route path="/admin/users/create" element={<UserForm />} />
+              <Route path="/admin/users/:id/edit" element={<UserForm />} />
+              <Route path="/admin/audit-logs" element={<AuditLogs />} />
+              <Route path="/admin/vertical/:verticalName" element={<VerticalDetails />} />
+            </Route>
+
+            {/* Inventory & Employee Routes (Admin & Super Admin) */}
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin']} />}>
+              <Route path="/inventory" element={<DeviceList />} />
+              <Route path="/inventory/new" element={<DeviceForm />} />
+              <Route path="/inventory/:id" element={<DeviceDetails />} />
+              <Route path="/inventory/:id/edit" element={<DeviceForm />} />
+
+              <Route path="/employees" element={<EmployeeList />} />
+              <Route path="/employees/new" element={<EmployeeForm />} />
+              <Route path="/employees/:id" element={<EmployeeDetails />} />
+              <Route path="/employees/:id/edit" element={<EmployeeForm />} />
+            </Route>
+          </Route>
+        </Route>
+
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;

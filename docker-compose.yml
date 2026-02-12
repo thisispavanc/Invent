@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  mysqldb:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: tanuh_inventory
+    ports:
+      - "3307:3306" # Mapped to 3307 to avoid conflict with local MySQL if running
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  backend:
+    build: ./backend
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      DB_HOST: mysqldb
+      DB_USER: root
+      DB_PASS: root
+      DB_NAME: tanuh_inventory
+      PORT: 3001
+      FRONTEND_URL: http://localhost:5173
+    depends_on:
+      - mysqldb
+
+  frontend:
+    build: ./frontend
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

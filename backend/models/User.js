@@ -25,7 +25,7 @@ module.exports = (sequelize) => {
             allowNull: false
         },
         role: {
-            type: DataTypes.ENUM('admin', 'employee'),
+            type: DataTypes.ENUM('super_admin', 'admin', 'employee'),
             defaultValue: 'employee'
         },
         employee_id: {
@@ -41,8 +41,28 @@ module.exports = (sequelize) => {
             defaultValue: true
         },
         last_login: {
-            type: DataTypes.DATE,
+            type: DataTypes.DATE, // Using Date for last_login
             allowNull: true
+        },
+        is_locked: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
+        },
+        locked_until: {
+            type: DataTypes.DATE, // Using Date for locked_until
+            allowNull: true
+        },
+        failed_login_attempts: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+        },
+        created_by: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: 'users',
+                key: 'id'
+            }
         }
     }, {
         tableName: 'users',

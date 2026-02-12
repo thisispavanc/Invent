@@ -19,7 +19,8 @@ module.exports = (sequelize) => {
         device_category: {
             type: DataTypes.ENUM(
                 'laptop', 'desktop', 'monitor', 'mobile_phone',
-                'tablet', 'accessory', 'software_license', 'other'
+                'tablet', 'accessory', 'software_license',
+                'Workstation', 'GPU', 'Assembled System', 'Other'
             ),
             allowNull: false
         },
