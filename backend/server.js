@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
+const path = require('path');
 const sequelize = require('./config/database');
 
 // Load env vars
@@ -56,6 +57,9 @@ app.use(session({
 }));
 
 sessionStore.sync();
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api', require('./routes'));

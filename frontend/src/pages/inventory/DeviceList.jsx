@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../lib/axios';
-import { Plus, Edit2, Trash2, Search, Laptop, Monitor, Smartphone, HardDrive } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Laptop, Monitor, Smartphone, HardDrive, Image as ImageIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const DeviceList = () => {
@@ -62,10 +62,16 @@ const DeviceList = () => {
                     <h1 className="text-2xl font-bold text-gray-800">Inventory</h1>
                     <p className="text-gray-500 mt-1">Manage IT assets and devices</p>
                 </div>
-                <Link to="/inventory/new" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors">
-                    <Plus className="w-5 h-5 mr-2" />
-                    Add Device
-                </Link>
+                <div className="flex gap-3">
+                    <Link to="/inventory/photos" className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors">
+                        <ImageIcon className="w-5 h-5 mr-2" />
+                        View Photos
+                    </Link>
+                    <Link to="/inventory/new" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors">
+                        <Plus className="w-5 h-5 mr-2" />
+                        Add Device
+                    </Link>
+                </div>
             </div>
 
             <div className="flex flex-col md:flex-row gap-4">

@@ -1,4 +1,4 @@
-import { Home, Users, Smartphone, Users as EmployeesIcon, LogOut } from 'lucide-react';
+import { Home, Users, Smartphone, Users as EmployeesIcon, LogOut, Package } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // path to context might differ depending on folder structure
 
@@ -7,6 +7,7 @@ const Sidebar = () => {
 
     const links = [
         { name: 'Dashboard', path: '/dashboard', icon: Home, roles: ['super_admin', 'admin', 'employee'] },
+        { name: 'My Devices', path: '/my-devices', icon: Package, roles: ['employee'] },
         { name: 'User Management', path: '/admin/users', icon: Users, roles: ['super_admin'] },
         { name: 'Inventory', path: '/inventory', icon: Smartphone, roles: ['super_admin', 'admin'] },
         { name: 'Employees', path: '/employees', icon: EmployeesIcon, roles: ['super_admin', 'admin'] },

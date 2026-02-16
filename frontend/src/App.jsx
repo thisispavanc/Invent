@@ -7,9 +7,11 @@ import UserForm from './pages/admin/UserForm';
 import DeviceList from './pages/inventory/DeviceList';
 import DeviceForm from './pages/inventory/DeviceForm';
 import DeviceDetails from './pages/inventory/DeviceDetails';
+import DevicePhotosGallery from './pages/inventory/DevicePhotosGallery';
 import EmployeeList from './pages/employees/EmployeeList';
 import EmployeeForm from './pages/employees/EmployeeForm';
 import EmployeeDetails from './pages/employees/EmployeeDetails';
+import MyDevices from './pages/employees/MyDevices';
 import AuditLogs from './pages/admin/AuditLogs';
 import VerticalDetails from './pages/admin/VerticalDetails';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -40,6 +42,11 @@ function App() {
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />
 
+            {/* Employee Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['employee']} />}>
+              <Route path="/my-devices" element={<MyDevices />} />
+            </Route>
+
             {/* Super Admin Routes */}
             <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
               <Route path="/admin/users" element={<Users />} />
@@ -52,6 +59,7 @@ function App() {
             {/* Inventory & Employee Routes (Admin & Super Admin) */}
             <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin']} />}>
               <Route path="/inventory" element={<DeviceList />} />
+              <Route path="/inventory/photos" element={<DevicePhotosGallery />} />
               <Route path="/inventory/new" element={<DeviceForm />} />
               <Route path="/inventory/:id" element={<DeviceDetails />} />
               <Route path="/inventory/:id/edit" element={<DeviceForm />} />

@@ -1,5 +1,6 @@
-const { Device, Employee, AuditLog } = require('../models');
+const { Device, Employee, AuditLog, Assignment, User } = require('../models');
 const { Op } = require('sequelize');
+const path = require('path');
 
 exports.listDevices = async (req, res) => {
     try {
@@ -39,6 +40,15 @@ exports.getDevice = async (req, res) => {
                 model: Employee,
                 as: 'employee',
                 attributes: ['id', 'full_name', 'employee_id', 'email', 'department']
+            }, {
+                model: Assignment,
+                as: 'assignmentHistory',
+                include: [{
+                    model: Employee,
+                    as: 'employee',
+                    attributes: ['id', 'full_name', 'employee_id']
+                }],
+                order: [['assignment_date', 'DESC']]
             }]
         });
         if (!device) return res.status(404).json({ success: false, message: 'Device not found' });
@@ -158,3 +168,124 @@ exports.deleteDevice = async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to retire device' });
     }
 };
+
+// Get devices assigned to logged-in employee
+exports.getMyDevices = async (req, res) => {
+    try {
+        // Get user's employee record
+        const user = await User.findByPk(req.session.userId, {
+            include: [{ model: Employee, as: 'employeeDetails' }]
+        });
+
+        if (!user || !user.employeeDetails) {
+            return res.status(404).json({ success: false, message: 'Employee profile not found' });
+        }
+
+        const employeeId = user.employeeDetails.id;
+
+        // Get all active assignments for this employee with device details
+        const assignments = await Assignment.findAll({
+            where: {
+                employee_id: employeeId,
+                assignment_status: 'active'
+            },
+            include: [{
+                model: Device,
+                as: 'device',
+                include: [{
+                    model: Employee,
+                    as: 'employee',
+                    attributes: ['id', 'full_name', 'employee_id']
+                }]
+            }],
+            order: [['assignment_date', 'DESC']]
+        });
+
+        res.json({ success: true, assignments });
+    } catch (error) {
+        console.error('Get my devices error:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch your devices' });
+    }
+};
+
+// Upload device photo by employee
+exports.uploadDevicePhoto = async (req, res) => {
+    try {
+        const { assignmentId } = req.params;
+
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No photo uploaded' });
+        }
+
+        // Get user's employee record
+        const user = await User.findByPk(req.session.userId, {
+            include: [{ model: Employee, as: 'employeeDetails' }]
+        });
+
+        if (!user || !user.employeeDetails) {
+            return res.status(404).json({ success: false, message: 'Employee profile not found' });
+        }
+
+        const employeeId = user.employeeDetails.id;
+
+        // Find the assignment and verify it belongs to this employee
+        const assignment = await Assignment.findByPk(assignmentId);
+
+        if (!assignment) {
+            return res.status(404).json({ success: false, message: 'Assignment not found' });
+        }
+
+        if (assignment.employee_id !== employeeId) {
+            return res.status(403).json({ success: false, message: 'Not authorized to upload photo for this assignment' });
+        }
+
+        // Save photo URL (relative path)
+        const photoUrl = `/uploads/device-photos/${req.file.filename}`;
+        assignment.device_photo_url = photoUrl;
+        await assignment.save();
+
+        // Audit log
+        await AuditLog.create({
+            session_id: req.sessionID || 'unknown',
+            user_id: req.session.userId,
+            username: req.session.username || 'Employee',
+            action_type: 'UPDATE',
+            entity_type: 'ASSIGNMENT',
+            entity_id: assignment.id,
+            description: `Uploaded device photo for assignment ${assignmentId}`,
+            ip_address: req.ip
+        });
+
+        res.json({ success: true, photoUrl, message: 'Photo uploaded successfully' });
+    } catch (error) {
+        console.error('Upload photo error:', error);
+        res.status(500).json({ success: false, message: 'Failed to upload photo' });
+    }
+};
+
+// Get all assignments with photos for admin gallery view
+exports.getAllDevicesWithPhotos = async (req, res) => {
+    try {
+        const assignments = await Assignment.findAll({
+            where: {
+                device_photo_url: { [Op.ne]: null },
+                assignment_status: 'active'
+            },
+            include: [{
+                model: Device,
+                as: 'device'
+            }, {
+                model: Employee,
+                as: 'employee',
+                attributes: ['id', 'full_name', 'employee_id']
+            }],
+            order: [['updated_at', 'DESC']]
+        });
+
+        res.json({ success: true, assignments });
+    } catch (error) {
+        console.error('Get all device photos error:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch device photos' });
+    }
+};
+

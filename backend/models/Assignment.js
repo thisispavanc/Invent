@@ -31,7 +31,12 @@ module.exports = (sequelize) => {
             allowNull: false
         },
         unassigned_by: DataTypes.INTEGER,
-        consent_form_id: DataTypes.INTEGER
+        consent_form_id: DataTypes.INTEGER,
+        device_photo_url: {
+            type: DataTypes.STRING(500),
+            allowNull: true,
+            comment: 'Photo uploaded by employee after receiving device'
+        }
     }, {
         tableName: 'assignments',
         timestamps: true,

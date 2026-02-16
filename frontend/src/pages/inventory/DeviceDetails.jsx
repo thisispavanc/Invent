@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../../lib/axios';
-import { ArrowLeft, User, Calendar, CreditCard, Tag, Settings, Cpu, MapPin } from 'lucide-react';
+import { ArrowLeft, User, Calendar, CreditCard, Tag, Settings, Cpu, MapPin, Image as ImageIcon } from 'lucide-react';
 import { format } from 'date-fns';
 
 const DeviceDetails = () => {
@@ -94,20 +94,46 @@ const DeviceDetails = () => {
                     <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
                         <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Current Assignment</h2>
                         {device.employee ? (
-                            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-100">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 font-bold">
-                                        {device.employee.full_name.charAt(0)}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-100">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 font-bold">
+                                            {device.employee.full_name.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-gray-900">{device.employee.full_name}</div>
+                                            <div className="text-xs text-gray-600">{device.employee.employee_id} • {device.employee.department}</div>
+                                        </div>
                                     </div>
+                                    <div className="text-right text-sm">
+                                        <div className="text-gray-500">Assigned on</div>
+                                        <div className="font-medium">{device.assignment_date ? format(new Date(device.assignment_date), 'PPP') : '-'}</div>
+                                    </div>
+                                </div>
+                                
+                                {/* Show uploaded device photo from current active assignment */}
+                                {device.assignmentHistory && device.assignmentHistory.length > 0 && (
                                     <div>
-                                        <div className="font-bold text-gray-900">{device.employee.full_name}</div>
-                                        <div className="text-xs text-gray-600">{device.employee.employee_id} • {device.employee.department}</div>
+                                        {device.assignmentHistory
+                                            .filter(assignment => assignment.assignment_status === 'active' && assignment.device_photo_url)
+                                            .map(assignment => (
+                                                <div key={assignment.id} className="mt-3">
+                                                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                                                        <ImageIcon className="w-4 h-4" />
+                                                        <span className="font-medium">Device Photo (Uploaded by Employee)</span>
+                                                    </div>
+                                                    <img
+                                                        src={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${assignment.device_photo_url}`}
+                                                        alt="Device uploaded by employee"
+                                                        className="w-full max-w-md rounded-lg border border-gray-200 shadow-sm"
+                                                    />
+                                                    <p className="text-xs text-gray-500 mt-2">
+                                                        Uploaded on {assignment.updated_at ? format(new Date(assignment.updated_at), 'PPP') : 'N/A'}
+                                                    </p>
+                                                </div>
+                                            ))}
                                     </div>
-                                </div>
-                                <div className="text-right text-sm">
-                                    <div className="text-gray-500">Assigned on</div>
-                                    <div className="font-medium">{device.assignment_date ? format(new Date(device.assignment_date), 'PPP') : '-'}</div>
-                                </div>
+                                )}
                             </div>
                         ) : (
                             <div className="p-4 bg-gray-50 rounded-lg text-center text-gray-500">
@@ -136,7 +162,7 @@ const DeviceDetails = () => {
                             </div>
                             <div className="pt-2 border-t flex justify-between items-center">
                                 <span className="text-gray-500 flex items-center gap-1"><CreditCard className="w-4 h-4" /> Cost</span>
-                                <span className="font-bold text-gray-900">${device.purchase_cost || '0.00'}</span>
+                                <span className="font-bold text-gray-900">₹{device.purchase_cost || '0.00'}</span>
                             </div>
                         </div>
                     </div>

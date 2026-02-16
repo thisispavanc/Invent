@@ -1,4 +1,4 @@
-const { Employee, Device, AuditLog } = require('../models');
+const { Employee, Device, AuditLog, Assignment } = require('../models');
 const { Op } = require('sequelize');
 
 exports.listEmployees = async (req, res) => {
@@ -33,10 +33,23 @@ exports.getEmployee = async (req, res) => {
             include: [{
                 model: Device,
                 as: 'currentDevices'
+            }, {
+                model: Assignment,
+                as: 'assignmentHistory',
+                include: [{
+                    model: Device,
+                    as: 'device'
+                }],
+                order: [['assignment_date', 'DESC']]
             }]
         });
         if (!employee) return res.status(404).json({ success: false, message: 'Employee not found' });
-        res.json({ success: true, employee });
+        
+        // Transform currentDevices to devices for frontend compatibility
+        const employeeData = employee.toJSON();
+        employeeData.devices = employeeData.currentDevices || [];
+        
+        res.json({ success: true, employee: employeeData });
     } catch (error) {
         console.error('Get employee error:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch employee' });

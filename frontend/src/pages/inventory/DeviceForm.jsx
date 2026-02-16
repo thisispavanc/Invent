@@ -213,7 +213,20 @@ const DeviceForm = () => {
                         {/* Financials - Full Width */}
                         <div className="col-span-1 md:col-span-2 space-y-4">
                             <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">Purchase Details (Optional)</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Purchase Cost (₹)</label>
+                                    <input 
+                                        type="number" 
+                                        name="purchase_cost" 
+                                        value={formData.purchase_cost} 
+                                        onChange={handleChange} 
+                                        placeholder="Enter device cost"
+                                        step="0.01"
+                                        min="0"
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                                    />
+                                </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
                                     <input type="text" name="vendor" value={formData.vendor} onChange={handleChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />

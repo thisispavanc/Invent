@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../../lib/axios';
-import { ArrowLeft, User, Mail, Phone, MapPin, Briefcase, Calendar, Laptop } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, MapPin, Briefcase, Calendar, Laptop, Image as ImageIcon, DollarSign } from 'lucide-react';
 import { format } from 'date-fns';
 
 const EmployeeDetails = () => {
@@ -26,7 +26,11 @@ const EmployeeDetails = () => {
 
     if (loading) return <div className="text-center p-10">Loading profile...</div>;
     if (!employee) return <div className="text-center p-10 text-red-500">Employee not found</div>;
-
+    // Calculate total cost of assigned devices
+    const totalDeviceCost = employee.devices?.reduce((sum, dev) => {
+        const cost = parseFloat(dev.purchase_cost) || 0;
+        return sum + cost;
+    }, 0) || 0;
     return (
         <div className="space-y-6">
             <button onClick={() => window.history.back()} className="flex items-center text-gray-500 hover:text-gray-900 transition-colors">
@@ -97,25 +101,60 @@ const EmployeeDetails = () => {
                     <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
                         <div className="flex justify-between items-center mb-4 border-b pb-2">
                             <h2 className="text-lg font-semibold text-gray-800">Assigned Assets</h2>
-                            {/* Link to assign new asset could go here */}
+                            <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full">
+                                <DollarSign className="w-4 h-4 text-green-600" />
+                                <span className="text-sm font-semibold text-green-700">
+                                    Total: ₹{totalDeviceCost.toFixed(2)}
+                                </span>
+                            </div>
                         </div>
 
                         {employee.devices && employee.devices.length > 0 ? (
                             <div className="space-y-3">
-                                {employee.devices.map(dev => (
-                                    <div key={dev.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-white rounded-md border border-gray-200">
-                                                <Laptop className="w-5 h-5 text-gray-600" />
+                                {employee.devices.map(dev => {
+                                    // Find the active assignment for this device
+                                    const activeAssignment = employee.assignmentHistory?.find(
+                                        a => a.device_id === dev.id && a.assignment_status === 'active'
+                                    );
+                                    const deviceCost = parseFloat(dev.purchase_cost) || 0;
+                                    
+                                    return (
+                                        <div key={dev.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-3 flex-1">
+                                                    <div className="p-2 bg-white rounded-md border border-gray-200">
+                                                        <Laptop className="w-5 h-5 text-gray-600" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="font-medium text-gray-900">{dev.device_name}</div>
+                                                        <div className="text-xs text-gray-500">{dev.asset_tag} • {dev.device_category}</div>
+                                                        {deviceCost > 0 && (
+                                                            <div className="text-xs font-medium text-green-600 mt-1">
+                                                                Cost: ₹{deviceCost.toFixed(2)}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <Link to={`/inventory/${dev.id}`} className="text-blue-600 text-sm hover:underline">View</Link>
                                             </div>
-                                            <div>
-                                                <div className="font-medium text-gray-900">{dev.device_name}</div>
-                                                <div className="text-xs text-gray-500">{dev.asset_tag} • {dev.device_category}</div>
-                                            </div>
+                                            
+                                            {/* Show uploaded photo if exists */}
+                                            {activeAssignment?.device_photo_url && (
+                                                <div className="mt-3 pt-3 border-t border-gray-200">
+                                                    <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
+                                                        <ImageIcon className="w-3 h-3" />
+                                                        <span>Device Photo (Employee Verified)</span>
+                                                    </div>
+                                                    <img
+                                                        src={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${activeAssignment.device_photo_url}`}
+                                                        alt="Device"
+                                                        className="w-full max-w-xs rounded-md border border-gray-200"
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
-                                        <Link to={`/inventory/${dev.id}`} className="text-blue-600 text-sm hover:underline">View</Link>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         ) : (
                             <div className="text-center py-6 text-gray-500">
